@@ -38,7 +38,7 @@ jobs:
           )
           echo "charts=${charts}" >> $GITHUB_OUTPUT
 
-  push-charts:
+  push:
     needs: changed-files
     name: Push Charts
     runs-on: ubuntu-latest
