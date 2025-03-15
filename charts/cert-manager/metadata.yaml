@@ -1,4 +1,4 @@
 ---
-registry: https://charts.jetstack.io
 chart: cert-manager
+registry: https://charts.jetstack.io
 version: v1.17.1

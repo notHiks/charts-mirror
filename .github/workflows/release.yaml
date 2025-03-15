@@ -26,16 +26,14 @@ jobs:
 
       - name: Get Changed Files
         id: changed-files
-        uses: tj-actions/changed-files@v45
+        uses: JJGadgets/tj-actions-changed-files@9200e69727eb73eb060652b19946b8a2fdfb654b
         with:
           files: charts/**/metadata.yaml
 
       - name: Extract Chart values
         id: charts
-        env:
-          FILTER: '[.]'
         run: |
-          charts=$(yq eval-all --indent=0 --output-format=json "${FILTER}" \
+          charts=$(yq eval-all --indent=0 --output-format=json "[.]" \
               ${{ steps.changed-files.outputs.all_changed_and_modified_files }} \
           )
           echo "charts=${charts}" >> $GITHUB_OUTPUT
