@@ -16,4 +16,5 @@
   ],
   dependencyDashboardTitle: "Renovate Dashboard 🤖",
   suppressNotifications: ["prEditedNotification", "prIgnoreNotification"],
+  schedule: ["0 * * * *"],
 }
