@@ -15,6 +15,6 @@
     ":timezone(America/Chicago)",
   ],
   dependencyDashboardTitle: "Renovate Dashboard 🤖",
-  schedule: ["every hour"],
+  schedule: ["0 * * * *"],
   suppressNotifications: ["prEditedNotification", "prIgnoreNotification"],
 }
