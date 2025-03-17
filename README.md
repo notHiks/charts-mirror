@@ -1,6 +1,6 @@
 # OCI Helm Charts Mirror
 
-This is my personal stop-gap mirror of OCI Helm Charts that can be used until maintainers of upstream charts publish them. See the issue [here](https://github.com/buroa/charts-mirror/issues/6) for tracking the progress of upstream support for OCI charts added here.
+This is our stop-gap mirror of OCI Helm Charts that can be used until maintainers of upstream charts publish them. See the issue [here](https://github.com/home-operations/charts-mirror/issues/6) for tracking the progress of upstream support for OCI charts added here.
 
 > [!CAUTION]
 > If you wish to use these charts understand it is **your responsiblity to make sure to change to the official OCI chart as soon as possible** as they will be deprecated here. I bare **no resposibility** for you **not paying close attention to this repository and the changes herein**.
@@ -10,7 +10,7 @@ This is my personal stop-gap mirror of OCI Helm Charts that can be used until ma
 ### CLI
 
 ```sh
-helm install ${NAME} --namespace ${NAMESPACE} oci://ghcr.io/buroa/charts-mirror/${CHART} --version ${VERSION}
+helm install ${NAME} --namespace ${NAMESPACE} oci://ghcr.io/home-operations/charts-mirror/${CHART} --version ${VERSION}
 ```
 
 ### Flux
@@ -29,7 +29,7 @@ spec:
     operation: copy
   ref:
     tag: ${VERSION}
-  url: oci://ghcr.io/buroa/charts-mirror/${CHART}
+  url: oci://ghcr.io/home-operations/charts-mirror/${CHART}
   verify:
     provider: cosign
 ---
