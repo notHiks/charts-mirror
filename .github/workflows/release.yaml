@@ -3,10 +3,10 @@ name: Release
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["main"]
     paths: ["charts/**/metadata.yaml"]
   push:
-    branches: ["master"]
+    branches: ["main"]
     paths: ["charts/**/metadata.yaml"]
   workflow_dispatch:
     inputs:
