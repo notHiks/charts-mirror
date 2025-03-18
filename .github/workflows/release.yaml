@@ -101,6 +101,21 @@ jobs:
         name: Sign artifacts with Cosign
         run: cosign sign --yes ghcr.io/${{ github.repository }}/${{ matrix.charts.chart }}:${{ matrix.charts.version }}
 
+      - if: ${{ github.event_name != 'pull_request' && failure() }}
+        name: Send Discord Webhook
+        uses: sarisia/actions-status-discord@5ddd3b114a98457dd80a39b2f00b6a998cd69008 # v1.15.3
+        with:
+          color: "0xFF0000"
+          description: |
+            Chart: `${{ matrix.charts.chart }}`
+            Version: `${{ matrix.charts.version }}`
+            [Rebuild](${{ github.server_url }}/${{ github.repository }}/actions/workflows/release.yaml)
+          nodetail: true
+          title: Chart build failed
+          username: GitHub Actions
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+
   status:
     if: ${{ !cancelled() }}
     needs: push
