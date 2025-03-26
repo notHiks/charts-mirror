@@ -15,6 +15,9 @@ helm install ${NAME} --namespace ${NAMESPACE} oci://ghcr.io/home-operations/char
 
 ### Flux
 
+> [!WARNING]
+> Even though these charts are signed via cosign it will not prevent against malicious code being pushed from upstream ending up in a release here. For example if cert-managers Helm chart is compromised, there's nothing stopping that release from being mirrored here.
+
 ```yaml
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta2
