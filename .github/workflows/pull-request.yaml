@@ -5,6 +5,7 @@ name: Pull Request
 on:
   pull_request:
     branches: ["main"]
+    paths: ["charts/**/metadata.yaml"]
 
 jobs:
   prepare:
@@ -17,8 +18,7 @@ jobs:
         id: changed-files
         uses: bjw-s-labs/action-changed-files@b1144fc772fca235a50902c7bb6cc431cc7d8e27 # v0.3.2
         with:
-          path: |
-            apps/**/metadata.yaml
+          patterns: charts/**/metadata.yaml
 
   changed:
     if: ${{ needs.prepare.outputs.changed-files != '[]' }}
@@ -34,7 +34,7 @@ jobs:
       - name: Extract Chart values
         id: charts
         run: |
-          charts=$(yq eval-all --indent=0 --output-format=json "[.]" ${{ needs.prepare.outputs.changed-files }})
+          charts=$(yq eval-all --indent=0 --output-format=json "[.]" ${{ join(fromJSON(needs.prepare.outputs.changed-files), ' ') }})
           echo "charts=${charts}" >> $GITHUB_OUTPUT
 
   build:
@@ -45,14 +45,13 @@ jobs:
     permissions:
       contents: read
       packages: read
-    secrets: inherit
     strategy:
       matrix:
         chart: ${{ fromJSON(needs.changed.outputs.charts) }}
       fail-fast: false
       max-parallel: 4
     with:
-      chart: ${{ matrix.chart.name }}
+      name: ${{ matrix.chart.name }}
       version: ${{ matrix.chart.version }}
       registry: ${{ matrix.chart.registry }}
       release: false
