@@ -10,7 +10,7 @@ This is our stop-gap mirror of OCI Helm Charts that can be used until maintainer
 ### CLI
 
 ```sh
-helm install ${NAME} --namespace ${NAMESPACE} oci://ghcr.io/home-operations/charts-mirror/${CHART} --version ${VERSION}
+helm install ${RELEASE_NAME} --namespace ${NAMESPACE} oci://ghcr.io/home-operations/charts-mirror/${CHART_NAME} --version ${CHART_VERSION}
 ```
 
 ### Flux
@@ -23,7 +23,7 @@ helm install ${NAME} --namespace ${NAMESPACE} oci://ghcr.io/home-operations/char
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
-  name: ${CHART}
+  name: ${CHART_NAME}
   namespace: ${NAMESPACE}
 spec:
   interval: 1h
@@ -31,24 +31,24 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    tag: ${VERSION}
-  url: oci://ghcr.io/home-operations/charts-mirror/${CHART}
+    tag: ${CHART_VERSION}
+  url: oci://ghcr.io/home-operations/charts-mirror/${CHART_NAME}
   verify:
     provider: cosign
     matchOIDCIdentity:
-      - issuer: "^https://token.actions.githubusercontent.com$"
-        subject: "^https://github.com/home-operations/charts-mirror.*$"
+      - issuer: ^https://token.actions.githubusercontent.com$
+        subject: ^https://github.com/home-operations/charts-mirror.*$
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ${NAME}
+  name: ${RELEASE_NAME}
   namespace: ${NAMESPACE}
 spec:
   interval: 1h
   chartRef:
     kind: OCIRepository
-    name: ${CHART}
+    name: ${CHART_NAME}
     namespace: ${NAMESPACE}
   values:
 ...
@@ -62,7 +62,7 @@ spec:
 
     ```yaml
     ---
-    registry: ${REGISTRY_URL}
+    registry: ${CHART_REGISTRY_URL}
     name: ${CHART_NAME}
     version: ${CHART_VERSION}
     ```
