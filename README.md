@@ -63,7 +63,7 @@ spec:
     ```yaml
     ---
     registry: ${REGISTRY_URL}
-    chart: ${CHART_NAME}
+    name: ${CHART_NAME}
     version: ${CHART_VERSION}
     ```
 
