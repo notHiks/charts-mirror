@@ -3,15 +3,13 @@
 name: Release
 
 on:
-  pull_request:
-    branches: ["main"]
   push:
     branches: ["main"]
     paths: ["charts/**/metadata.yaml"]
   workflow_dispatch:
     inputs:
       chart:
-        description: Chart to release
+        description: Chart
         required: true
 
 permissions:
@@ -26,7 +24,7 @@ jobs:
     outputs:
       changed-files: ${{ steps.changed-files.outputs.changed_files }}
     steps:
-      - name: Get changed files
+      - name: Get Changed Files
         id: changed-files
         uses: bjw-s-labs/action-changed-files@b1144fc772fca235a50902c7bb6cc431cc7d8e27 # v0.3.2
         with:
@@ -55,10 +53,10 @@ jobs:
           charts=$(yq eval-all --indent=0 --output-format=json "[.]" $charts)
           echo "charts=${charts}" >> $GITHUB_OUTPUT
 
-  push:
+  build:
     if: ${{ needs.changed.outputs.charts != '[]' }}
     needs: ["changed"]
-    name: Push Charts
+    name: Build Charts
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -69,12 +67,10 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
 
-      - if: ${{ github.event_name != 'pull_request' }}
-        name: Install Cosign
+      - name: Install Cosign
         uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
-      - if: ${{ github.event_name != 'pull_request' }}
-        name: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ghcr.io
@@ -82,23 +78,26 @@ jobs:
           password: ${{ github.token }}
 
       - name: Add Helm Repository
-        run: helm repo add upstream ${{ matrix.charts.registry }}
+        run: |
+          helm repo add upstream ${{ matrix.charts.registry }}
 
       - name: Update Helm Repository
-        run: helm repo update upstream
+        run: |
+          helm repo update upstream
 
       - name: Pull Chart
-        run: helm pull upstream/${{ matrix.charts.chart }} --version ${{ matrix.charts.version }}
+        run: |
+          helm pull upstream/${{ matrix.charts.chart }} --version ${{ matrix.charts.version }}
 
-      - if: ${{ github.event_name != 'pull_request' }}
-        name: Push Chart
-        run: helm push *.tgz oci://ghcr.io/${{ github.repository }}
+      - name: Push Chart
+        run: |
+          helm push *.tgz oci://ghcr.io/${{ github.repository }}
 
-      - if: ${{ github.event_name != 'pull_request' }}
-        name: Sign artifacts with Cosign
-        run: cosign sign --yes ghcr.io/${{ github.repository }}/${{ matrix.charts.chart }}:${{ matrix.charts.version }}
+      - name: Sign artifacts with Cosign
+        run: |
+          cosign sign --yes ghcr.io/${{ github.repository }}/${{ matrix.charts.chart }}:${{ matrix.charts.version }}
 
-      - if: ${{ github.event_name != 'pull_request' && failure() }}
+      - if: ${{ failure() }}
         name: Send Discord Webhook
         uses: sarisia/actions-status-discord@5ddd3b114a98457dd80a39b2f00b6a998cd69008 # v1.15.3
         with:
@@ -115,8 +114,8 @@ jobs:
 
   status:
     if: ${{ !cancelled() }}
-    needs: ["push"]
-    name: Push Charts Success
+    needs: ["build"]
+    name: Build Success
     runs-on: ubuntu-latest
     steps:
       - name: Any jobs failed?

@@ -1,0 +1,64 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Pull Request
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      changed-files: ${{ steps.changed-files.outputs.changed_files }}
+    steps:
+      - name: Get Changed Files
+        id: changed-files
+        uses: bjw-s-labs/action-changed-files@b1144fc772fca235a50902c7bb6cc431cc7d8e27 # v0.3.2
+        with:
+          path: |
+            apps/**/metadata.yaml
+
+  build:
+    if: ${{ needs.prepare.outputs.changed-files != '[]' }}
+    needs: ["prepare"]
+    name: Build Charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charts: ${{ fromJSON(needs.prepare.outputs.changed-files) }}
+      max-parallel: 4
+      fail-fast: false
+    steps:
+      - name: Install Helm
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+
+      - name: Add Helm Repository
+        run: |
+          helm repo add upstream ${{ matrix.charts.registry }}
+
+      - name: Update Helm Repository
+        run: |
+          helm repo update upstream
+
+      - name: Pull Chart
+        run: |
+          helm pull upstream/${{ matrix.charts.chart }} --version ${{ matrix.charts.version }}
+
+  status:
+    if: ${{ !cancelled() }}
+    needs: ["build"]
+    name: Build Success
+    runs-on: ubuntu-latest
+    steps:
+      - name: Any jobs failed?
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
+
+      - name: All jobs passed or skipped?
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: echo "All jobs passed or skipped" && echo "${{ toJSON(needs.*.result) }}"
