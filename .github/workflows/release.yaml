@@ -9,13 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       chart:
-        description: Chart
+        type: string
+        description: Chart Name
         required: true
-
-permissions:
-  contents: read
-  id-token: write
-  packages: write
+      release:
+        type: boolean
+        description: Release
+        required: false
+        default: false
 
 jobs:
   prepare:
@@ -56,61 +57,23 @@ jobs:
   build:
     if: ${{ needs.changed.outputs.charts != '[]' }}
     needs: ["changed"]
-    name: Build Charts
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.chart.name }}
+    uses: ./.github/workflows/chart-builder.yaml
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    secrets: inherit
     strategy:
       matrix:
-        charts: ${{ fromJSON(needs.changed.outputs.charts) }}
-      max-parallel: 4
+        chart: ${{ fromJSON(needs.changed.outputs.charts) }}
       fail-fast: false
-    steps:
-      - name: Install Helm
-        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Add Helm Repository
-        run: |
-          helm repo add upstream ${{ matrix.charts.registry }}
-
-      - name: Update Helm Repository
-        run: |
-          helm repo update upstream
-
-      - name: Pull Chart
-        run: |
-          helm pull upstream/${{ matrix.charts.chart }} --version ${{ matrix.charts.version }}
-
-      - name: Push Chart
-        run: |
-          helm push *.tgz oci://ghcr.io/${{ github.repository }}
-
-      - name: Sign artifacts with Cosign
-        run: |
-          cosign sign --yes ghcr.io/${{ github.repository }}/${{ matrix.charts.chart }}:${{ matrix.charts.version }}
-
-      - if: ${{ failure() }}
-        name: Send Discord Webhook
-        uses: sarisia/actions-status-discord@5ddd3b114a98457dd80a39b2f00b6a998cd69008 # v1.15.3
-        with:
-          color: "0xFF0000"
-          description: |
-            Chart: `${{ matrix.charts.chart }}`
-            Version: `${{ matrix.charts.version }}`
-            [Rebuild](${{ github.server_url }}/${{ github.repository }}/actions/workflows/release.yaml)
-          nodetail: true
-          title: Chart build failed
-          username: GitHub Actions
-          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+      max-parallel: 4
+    with:
+      chart: ${{ matrix.chart.name }}
+      version: ${{ matrix.chart.version }}
+      registry: ${{ matrix.chart.registry }}
+      release: ${{ github.event_name == 'workflow_dispatch' && inputs.release || github.event_name == 'push' }}
 
   status:
     if: ${{ !cancelled() }}
