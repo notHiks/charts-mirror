@@ -94,7 +94,7 @@ jobs:
             > A chart has been deprecated and will no longer receive updates.
             > After **6 months** from now, its image will be **removed** from our container registry.
 
-            ## 📦 Application
+            ## 📦 Chart
 
             **Name**: ${{ inputs.name }}
             **Reason**: ${{ inputs.reason }}
