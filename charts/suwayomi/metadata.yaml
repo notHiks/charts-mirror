@@ -1,0 +1,4 @@
+---
+registry: https://notHiks.github.io/charts/
+name: docker-app
+version: 0.1.0
