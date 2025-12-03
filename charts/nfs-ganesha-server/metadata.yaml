@@ -1,4 +1,4 @@
 ---
 registry: https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-name: nfs-provisioner-charts
+name: nfs-server-provisioner
 version: 1.8.0
